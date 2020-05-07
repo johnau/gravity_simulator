@@ -5,7 +5,10 @@ from glm import vec2, vec3
 import math
 
 from constants import BACKGROUND_COLOR
-from objects import CelestialObject, VelocityArrow
+# from objects import CelestialObject, VelocityArrow
+# from objects import VelocityArrow
+from transient_entity import IndicatorArrow
+from celestial_entity import PlanetEntity
 from inputs import Inputs, Button
 from scene import CelestialScene
 
@@ -128,7 +131,7 @@ class DrawState(State):
             self.__dynamic_input_funcs["temp2"] = self.app.inputs.inputs["new_object"].on_release(self.__new_object_stage2)
 
             center = pygame.mouse.get_pos()
-            self.curr_celestial = CelestialObject(center) #set radius to 0 so the initializer will set PLANET_MIN_RADIUS
+            self.curr_celestial = PlanetEntity(center) #set radius to 0 so the initializer will set PLANET_MIN_RADIUS
     
     def __new_object_stage1_cont(self):
         """
@@ -158,7 +161,7 @@ class DrawState(State):
             self.setting_velocity = True
 
             center = self.curr_celestial.rect.center
-            self.curr_velo_arrow = VelocityArrow(center)
+            self.curr_velo_arrow = IndicatorArrow(center)
             # self.scene.transient_objs.append(self.curr_velo_arrow)
 
     def __new_object_stage2_cont(self):

@@ -1,5 +1,6 @@
 import pygame
-from objects import CelestialObject
+# from objects import CelestialObject
+from celestial_entity import CelestialEntity
 
 class CelestialSpriteGroup(pygame.sprite.Group):
     def __init__(self):
@@ -8,7 +9,7 @@ class CelestialSpriteGroup(pygame.sprite.Group):
 
     def add(self, *celestials):
         for celestial in celestials:
-            if isinstance(celestial, CelestialObject):
+            if isinstance(celestial, CelestialEntity):
                 celestial.id = "CB" + str(self.__id_track)
 
                 print(f"Added a new Celestial Body with id: {celestial.id}")

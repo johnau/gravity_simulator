@@ -2,7 +2,13 @@ from glm import vec2, vec3
 import pygame
 
 from constants import BACKGROUND_COLOR, CAM_MOVE_SPEED, CAM_ZOOM_AMOUNT, ZOOM_MIN, ZOOM_MAX, TYPE_ACCEL, TYPE_VEL, SCREEN_WIDTH
-from objects import CelestialObject, SpriteEntity, TransientDrawEntity, TextObject, VelocityArrow
+# from objects import CelestialObject, SpriteEntity, TransientDrawEntity, TextObject, VelocityArrow
+# from objects import TransientDrawEntity, TextObject, VelocityArrow
+# from objects import TextObject
+from usercontrol import UserControlGroup, Label, ToggleButton
+from celestial_scene_gui import CelestialSceneGui
+from transient_entity import TransientEntity, IndicatorArrow
+from celestial_entity import CelestialEntity, PlanetEntity
 from containers import CelestialSpriteGroup
 
 class Camera():
@@ -77,9 +83,19 @@ class CelestialScene(Scene):
         self.celest_objs = CelestialSpriteGroup()
         self.transient_objs = []
         
-        self.__camera_pos_disp = TextObject('X: 0, Y: 0, Z: 0', self.app.font, (0,0,0))
+        self.controls = UserControlGroup()
+        self.gui = CelestialSceneGui(self.controls)
+        self.gui.build_control_panel((300, 20))
+
+        # self.__camera_pos_disp = TextObject('X: 0, Y: 0, Z: 0', self.app.font, (0,0,0))
+        self.__camera_pos_disp = Label(self.controls, "camera_pos_label", text = 'X: 0000.0, Y: 0000.0, Z: 0000.0', font = self.app.font)
+        self.__camera_pos_disp.x = 5
+        self.__camera_pos_disp.y = 5
 
         self.bg_color = BACKGROUND_COLOR
+
+        for c in self.controls:
+            print(f"Control of type: {type(c)}")
 
     def add_new_celestial(self, new_celestial):
         # New celestial instance with world_offset
@@ -97,8 +113,8 @@ class CelestialScene(Scene):
         self.content.add(new_celestial)
 
         # Add vector arrows to for celestial
-        arr_accel = VelocityArrow(new_celestial.position, new_celestial, color=(200,0,0), indicator_type=TYPE_ACCEL, thickness=1)
-        arr_vel = VelocityArrow(new_celestial.position, new_celestial, color=(0,70,170), indicator_type=TYPE_VEL, thickness=1)
+        arr_accel = IndicatorArrow(new_celestial.position, new_celestial, color=(200,0,0), indicator_type=TYPE_ACCEL, thickness=1)
+        arr_vel = IndicatorArrow(new_celestial.position, new_celestial, color=(0,70,170), indicator_type=TYPE_VEL, thickness=1)
 
         self.transient_objs.append(arr_accel)
         self.transient_objs.append(arr_vel)
@@ -124,28 +140,33 @@ class CelestialScene(Scene):
         """
         super().update(delta_time)
 
-        # Update Camera Position Text Display
+        # Update Camera Position Label UserControl
         cam_text = f"X: {self.camera.position.x}, Y: {self.camera.position.y}, Z: {self.camera.position.z}"
         self.__camera_pos_disp.text = cam_text
 
         # Call update() method of all sprites in the sprite.Group()
         self.celest_objs.update(delta_time)
 
+        # Call update() method of all user controls in the 'controls' group
+        self.controls.update(delta_time)
+        for c in self.controls:
+            if isinstance(c, ToggleButton):
+                print(f"Updating control of type: {type(c)}")
+
         # Iterate sprite group
         for o in self.celest_objs:
             # Update world offset for all items
-            if isinstance(o, SpriteEntity):
+            if isinstance(o, CelestialEntity):
                 o.world_offset = self.camera.position
                 o.world_rotation = self.camera.rotation
 
-            # Reset 'just_calcd' variable for next frame
-            if isinstance(o, CelestialObject):
+                # Reset 'just_calcd' variable for next frame
                 o.force_just_calcd = False
 
         # Iterate transient non-sprite graphical objects list (in reverse to protect when removing)
         for t in reversed(self.transient_objs):
             # Update world offset, call update() and remove expired Transients
-            if isinstance(t, TransientDrawEntity):
+            if isinstance(t, TransientEntity):
                 t.world_offset = self.camera.position
                 t.update(delta_time)
                 if t.dead:
@@ -161,7 +182,17 @@ class CelestialScene(Scene):
 
         # Iterate all Transient objects and call .draw() func
         for t in self.transient_objs:
-            if isinstance(t, TransientDrawEntity):
+            if isinstance(t, TransientEntity):
                 t.draw(surface)
 
-        self.__camera_pos_disp.draw(surface)
+        # Draw all controls in the 'controls' group
+        self.controls.draw(surface)
+
+    def __create_gui_controls(self):
+        play_pause_img = pygame.Surface(50, 50)
+        
+        play_pause_btn = None
+        create_planet_btn = None
+        select_celestial_btn = None
+        move_camera_btn = None
+        rotate_camera_btn = None
